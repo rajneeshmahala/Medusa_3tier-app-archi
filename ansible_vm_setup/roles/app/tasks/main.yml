@@ -1,0 +1,43 @@
+- name: Install Node 20
+  shell: |
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt install -y nodejs git
+  args:
+    executable: /bin/bash
+
+- name: Install Medusa CLI
+  npm:
+    name: "@medusajs/medusa-cli"
+    global: yes
+
+- name: Create backend
+  command: medusa new medusa-backend --seed
+  args:
+    creates: medusa-backend
+
+- name: Configure .env
+  copy:
+    dest: medusa-backend/.env
+    content: |
+      DATABASE_URL=postgres://medusauser:StrongPassword123@10.0.3.4:5432/medusa
+      PORT=9000
+
+- name: Install dependencies
+  command: npm install
+  args:
+    chdir: medusa-backend
+
+- name: Build app
+  command: npm run build
+  args:
+    chdir: medusa-backend
+
+- name: Install PM2
+  npm:
+    name: pm2
+    global: yes
+
+- name: Start backend with PM2
+  command: pm2 start npm --name "medusa-backend" -- start
+  args:
+    chdir: medusa-backend

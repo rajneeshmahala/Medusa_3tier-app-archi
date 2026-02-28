@@ -1,0 +1,37 @@
+- name: Install Node 20
+  shell: |
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt install -y nodejs git
+  args:
+    executable: /bin/bash
+
+- name: Create Next.js app
+  command: npx create-next-app@latest medusa-frontend --use-npm --yes
+  args:
+    creates: medusa-frontend
+
+- name: Configure backend URL
+  copy:
+    dest: medusa-frontend/.env.local
+    content: |
+      NEXT_PUBLIC_MEDUSA_BACKEND_URL=http://10.0.2.4:9000
+
+- name: Install dependencies
+  command: npm install
+  args:
+    chdir: medusa-frontend
+
+- name: Build frontend
+  command: npm run build
+  args:
+    chdir: medusa-frontend
+
+- name: Install PM2
+  npm:
+    name: pm2
+    global: yes
+
+- name: Start frontend with PM2
+  command: pm2 start npm --name "nextjs-frontend" -- start
+  args:
+    chdir: medusa-frontend
