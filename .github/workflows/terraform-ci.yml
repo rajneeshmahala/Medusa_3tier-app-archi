@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   terraform:
-    name: Terraform Format, Validate & KeyVault
+    name: Terraform Plan & Apply
     runs-on: ubuntu-latest
 
     defaults:
@@ -22,11 +22,15 @@ jobs:
         working-directory: terraform
 
     steps:
+      # ---------------------------------
+      # Checkout
+      # ---------------------------------
       - name: Checkout Repository
         uses: actions/checkout@v4
-      # ----------------------------
+
+      # ---------------------------------
       # Azure OIDC Login
-      # ----------------------------
+      # ---------------------------------
       - name: Azure Login via OIDC
         uses: azure/login@v2
         with:
@@ -34,39 +38,47 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
-
-      - name: Terraform Init 
-        run: terraform init #-backend=false
-
-      - name: Terraform plan
-        run: terraform plan
-
-      - name: Terraform apply
-        run: terraform apply -auto-approve
-      - name: Terraform outputs
-        run: terraform output -raw ansible_inventory > ../ansible_vm_setup/inventory.ini
-      
-      - name: Terraform destroy
-        run: terraform destroy -auto-approve
-
-        
-      # ----------------------------
+      # ---------------------------------
       # Fetch SSH Key from Key Vault
-      # ----------------------------
+      # ---------------------------------
       - name: Fetch SSH Key from Key Vault
         run: |
           KEY=$(az keyvault secret show \
-            --vault-name kv-rajneesh-dev \
+            --vault-name kv-rajneesh-prod \
             --name vm-ssh-private-key \
             --query value -o tsv)
 
           mkdir -p ~/.ssh
           echo "$KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+
+      - name: Generate Public Key
+        run: |
+          ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+          chmod 644 ~/.ssh/id_rsa.pub
+
+      # ---------------------------------
+      # Setup Terraform
+      # ---------------------------------
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      - name: Generate Ansible Inventory
+        run: terraform output -raw ansible_inventory > ../ansible_vm_setup/inventory.ini
 
       - name: Verify SSH Key
         run: ls -la ~/.ssh
