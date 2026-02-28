@@ -45,7 +45,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           az keyvault secret show \
-            --vault-name kv-rajneesh-dev \
+            --vault-name kv-rajneesh-prod \
             --name vm-ssh-private-key \
             --query value -o tsv > ~/.ssh/id_rsa
 
