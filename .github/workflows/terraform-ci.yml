@@ -43,13 +43,12 @@ jobs:
       # ---------------------------------
       - name: Fetch SSH Key from Key Vault
         run: |
-          KEY=$(az keyvault secret show \
-            --vault-name kv-rajneesh-prod \
-            --name vm-ssh-private-key \
-            --query value -o tsv)
-
           mkdir -p ~/.ssh
-          echo "$KEY" > ~/.ssh/id_rsa
+          az keyvault secret show \
+            --vault-name kv-rajneesh-dev \
+            --name vm-ssh-private-key \
+            --query value -o tsv > ~/.ssh/id_rsa
+
           chmod 600 ~/.ssh/id_rsa
 
       - name: Generate Public Key
@@ -82,3 +81,6 @@ jobs:
 
       - name: Verify SSH Key
         run: ls -la ~/.ssh
+
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve
