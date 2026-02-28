@@ -1,6 +1,9 @@
 #                                                              <Medusa_3tier-app-archi>
 
 <h1 align="center">🚀 AKS Production Architecture</h1>
+<p align="center">
+  <img src="banner.png" width="600"/>
+</p>
 
 ![Terraform](https://img.shields.io/badge/IaC-Terraform-blue)
 ![Kubernetes](https://img.shields.io/badge/Orchestration-K8s-green)
