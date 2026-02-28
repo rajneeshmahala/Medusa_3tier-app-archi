@@ -47,14 +47,14 @@ jobs:
           az keyvault secret show \
             --vault-name kv-rajneesh-prod \
             --name vm-ssh-private-key \
-            --query value -o tsv > ~/.ssh/id_rsa
+            --query value -o tsv > id_rsa
 
-          chmod 600 ~/.ssh/id_rsa
+          chmod 600 id_rsa
 
       - name: Generate Public Key
         run: |
-          ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
-          chmod 644 ~/.ssh/id_rsa.pub
+          ssh-keygen -y -f id_rsa > id_rsa.pub
+          chmod 644 id_rsa.pub
 
       # ---------------------------------
       # Setup Terraform
