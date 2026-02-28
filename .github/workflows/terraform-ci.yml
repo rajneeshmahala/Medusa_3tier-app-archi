@@ -78,6 +78,11 @@ jobs:
 
       - name: Generate Ansible Inventory
         run: terraform output -raw ansible_inventory > ../ansible_vm_setup/inventory.ini
+      # ---------------------------------
+      # output variable to generate Ansible inventory file
+      # ---------------------------------
+      - name: Generate Ansible Inventory
+        run: terraform output 
 
       # ---------------------------------
       # WAIT 10 MINUTES
