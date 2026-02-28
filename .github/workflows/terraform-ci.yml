@@ -24,21 +24,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.6.6
-
-      - name: Terraform Init (no backend)
-        run: terraform init -backend=false
-
-      - name: Terraform Format Check
-        run: terraform fmt -check -recursive
-
-      - name: Terraform Validate
-        run: terraform validate
-
       # ----------------------------
       # Azure OIDC Login
       # ----------------------------
@@ -49,6 +34,26 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Init 
+        run: terraform init #-backend=false
+
+      - name: Terraform plan
+        run: terraform plan
+
+      - name: Terraform apply
+        run: terraform apply -auto-approve
+      - name: Terraform outputs
+        run: terraform output -raw ansible_inventory > ../ansible_vm_setup/inventory.ini
+      
+      - name: Terraform destroy
+        run: terraform destroy -auto-approve
+
+        
       # ----------------------------
       # Fetch SSH Key from Key Vault
       # ----------------------------
