@@ -26,6 +26,24 @@ resource "azurerm_public_ip" "vm1_pip" {
   sku                 = "Standard"
 }
 
+resource "azurerm_network_security_group" "vm1_nsg" {
+  name                = "nsg-vm1-ssh"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "Allow-SSH-Inbound"
+    priority                   = 1000
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = var.ssh_source_cidr
+    destination_address_prefix = "*"
+  }
+}
+
 resource "azurerm_network_interface" "nic1" {
   name                = "nic-vm1"
   location            = var.location
@@ -37,6 +55,11 @@ resource "azurerm_network_interface" "nic1" {
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.vm1_pip.id
   }
+}
+
+resource "azurerm_network_interface_security_group_association" "nic1_nsg_assoc" {
+  network_interface_id      = azurerm_network_interface.nic1.id
+  network_security_group_id = azurerm_network_security_group.vm1_nsg.id
 }
 
 resource "azurerm_network_interface" "nic2" {
@@ -64,12 +87,12 @@ resource "azurerm_network_interface" "nic3" {
 }
 
 resource "azurerm_linux_virtual_machine" "vm1" {
-  name                = "vm1-public"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = var.location
-  size                = var.vm_size
-  admin_username      = var.admin_username
-  admin_password      = var.admin_password
+  name                            = "vm1-public"
+  resource_group_name             = azurerm_resource_group.rg.name
+  location                        = var.location
+  size                            = var.vm_size
+  admin_username                  = var.admin_username
+  admin_password                  = var.admin_password
   disable_password_authentication = false
 
   network_interface_ids = [azurerm_network_interface.nic1.id]
@@ -88,12 +111,12 @@ resource "azurerm_linux_virtual_machine" "vm1" {
 }
 
 resource "azurerm_linux_virtual_machine" "vm2" {
-  name                = "vm2-private"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = var.location
-  size                = var.vm_size
-  admin_username      = var.admin_username
-  admin_password      = var.admin_password
+  name                            = "vm2-private"
+  resource_group_name             = azurerm_resource_group.rg.name
+  location                        = var.location
+  size                            = var.vm_size
+  admin_username                  = var.admin_username
+  admin_password                  = var.admin_password
   disable_password_authentication = false
 
   network_interface_ids = [azurerm_network_interface.nic2.id]
@@ -112,12 +135,12 @@ resource "azurerm_linux_virtual_machine" "vm2" {
 }
 
 resource "azurerm_linux_virtual_machine" "vm3" {
-  name                = "vm3-private"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = var.location
-  size                = var.vm_size
-  admin_username      = var.admin_username
-  admin_password      = var.admin_password
+  name                            = "vm3-private"
+  resource_group_name             = azurerm_resource_group.rg.name
+  location                        = var.location
+  size                            = var.vm_size
+  admin_username                  = var.admin_username
+  admin_password                  = var.admin_password
   disable_password_authentication = false
 
   network_interface_ids = [azurerm_network_interface.nic3.id]

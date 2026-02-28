@@ -35,3 +35,8 @@ variable "admin_password" {
   description = "Provide secure password"
   sensitive   = true
 }
+
+variable "ssh_source_cidr" {
+  description = "CIDR allowed to SSH to vm1 (public). Example: 203.0.113.10/32"
+  default     = "0.0.0.0/0"
+}
