@@ -7,6 +7,8 @@ This project provisions and configures a simple 3-tier architecture on Azure:
 
 Infrastructure is created with Terraform under `terraform/`, and app/database setup can be performed with Ansible under `ansible_vm_setup/` (or shell scripts under `script_vm_setup `).
 
+Detailed architecture document: [architure.md](./architure.md)
+
 ## Architecture
 
 - Resource Group: `rg-3vm-vnet-lab`
