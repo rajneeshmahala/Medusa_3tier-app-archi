@@ -5,8 +5,6 @@
   <img src="banner.png" width="600"/>
 </p>
 
-
-
 ![Terraform](https://img.shields.io/badge/IaC-Terraform-blue)
 ![Kubernetes](https://img.shields.io/badge/Orchestration-K8s-green)
 ![License](https://img.shields.io/badge/license-MIT-brightgreen)
