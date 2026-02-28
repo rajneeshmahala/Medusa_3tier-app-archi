@@ -1,21 +1,21 @@
-#                                                              <Medusa_3tier-app-archi>
+# Azure 3 VM VNet Lab (Terraform)
 
-<h1 align="center">🚀 AKS Production Architecture</h1>
-<p align="center">
-  <img src="banner.png" width="600"/>
-</p>
+## Architecture
+- 1 VNet
+- 3 Subnets
+- 3 Linux VMs (Standard_DC1s_v3)
+- Only VM1 has Public IP
 
-![Terraform](https://img.shields.io/badge/IaC-Terraform-blue)
-![Kubernetes](https://img.shields.io/badge/Orchestration-K8s-green)
-![License](https://img.shields.io/badge/license-MIT-brightgreen)
+## Region
+Central India
 
+## Deployment
 
-<h12 align="center">🚀 AKS Production Deployment</h12>
+1. az login
+2. terraform init
+3. terraform plan
+4. terraform apply
 
-## 📌 Overview
-## 🏗 Architecture
-## 🔐 Security
-## ⚙️ Installation
-## 🚀 CI/CD Pipeline
-## 📊 Monitoring
-## 📜 License
+## Destroy
+
+terraform destroy
