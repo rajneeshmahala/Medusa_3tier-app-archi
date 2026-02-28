@@ -44,17 +44,25 @@ jobs:
       - name: Fetch SSH Key from Key Vault
         run: |
           mkdir -p ~/.ssh
-          az keyvault secret show \
+          SECRET_VALUE="$(az keyvault secret show \
             --vault-name kv-rajneesh-prod \
             --name vm-ssh-private-key \
-            --query value -o tsv > id_rsa
+            --query value -o tsv)"
 
-          chmod 600 id_rsa
+          # Handle plain PEM/OpenSSH keys, escaped newlines, and CRLF.
+          if printf '%s' "$SECRET_VALUE" | grep -q "BEGIN .*PRIVATE KEY"; then
+            printf '%s\n' "$SECRET_VALUE" | tr -d '\r' > ~/.ssh/id_rsa
+          else
+            printf '%s' "$SECRET_VALUE" | sed 's/\\n/\n/g' | tr -d '\r' > ~/.ssh/id_rsa
+          fi
+
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keygen -lf ~/.ssh/id_rsa >/dev/null
 
       - name: Generate Public Key
         run: |
-          ssh-keygen -y -f id_rsa > id_rsa.pub
-          chmod 644 id_rsa.pub
+          ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+          chmod 644 ~/.ssh/id_rsa.pub
 
       # ---------------------------------
       # Setup Terraform
