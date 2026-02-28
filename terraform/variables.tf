@@ -32,8 +32,8 @@ variable "admin_username" {
 }
 
 variable "admin_password" {
-  description = "Provide secure password"
-  sensitive   = true
+  default     = "YourStrongPassword123!"
+  
 }
 
 variable "ssh_source_cidr" {
