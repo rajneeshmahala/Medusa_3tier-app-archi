@@ -3,18 +3,36 @@
     name:
       - postgresql
       - postgresql-contrib
+      - python3-psycopg2
     state: present
     update_cache: yes
 
+- name: Locate postgresql.conf
+  shell: "find /etc/postgresql -name postgresql.conf | head -n 1"
+  register: pg_conf_path
+  changed_when: false
+
+- name: Locate pg_hba.conf
+  shell: "find /etc/postgresql -name pg_hba.conf | head -n 1"
+  register: pg_hba_path
+  changed_when: false
+
+- name: Validate PostgreSQL config paths were found
+  assert:
+    that:
+      - pg_conf_path.stdout | length > 0
+      - pg_hba_path.stdout | length > 0
+    fail_msg: "Could not locate PostgreSQL config files under /etc/postgresql."
+
 - name: Allow remote connections
   lineinfile:
-    path: "/etc/postgresql/16/main/postgresql.conf"
+    path: "{{ pg_conf_path.stdout }}"
     regexp: "^#?listen_addresses"
     line: "listen_addresses = '*'"
 
 - name: Allow app subnet access
   lineinfile:
-    path: "/etc/postgresql/16/main/pg_hba.conf"
+    path: "{{ pg_hba_path.stdout }}"
     line: "host all all 10.0.2.0/24 md5"
 
 - name: Restart PostgreSQL
