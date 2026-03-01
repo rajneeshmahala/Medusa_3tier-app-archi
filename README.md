@@ -42,6 +42,7 @@ Terraform creates:
 - One Standard public IP for `vm1`
 - One NSG rule for SSH on `vm1`
 - Three Linux VMs using Ubuntu 22.04 **Gen2** image (`22_04-lts-gen2`) to match `Standard_DC1s_v3`
+- Linux VM login configured with `admin_ssh_key` (public key auth)
 
 Outputs include:
 - `vm1_public_ip`
@@ -85,7 +86,7 @@ terraform init
 terraform fmt
 terraform validate
 terraform plan
-terraform apply
+terraform apply -auto-approve -var "admin_ssh_public_key=$(cat ~/.ssh/id_rsa.pub)"
 ```
 
 Get outputs:
@@ -103,14 +104,14 @@ Username default is `azureuser`.
 SSH to public VM (`vm1`):
 
 ```bash
-ssh azureuser@$(cd terraform && terraform output -raw vm1_public_ip)
+ssh -i ~/.ssh/id_rsa azureuser@$(cd terraform && terraform output -raw vm1_public_ip)
 ```
 
 From `vm1`, reach private VMs:
 
 ```bash
-ssh azureuser@$(cd terraform && terraform output -raw vm2_private_ip)
-ssh azureuser@$(cd terraform && terraform output -raw vm3_private_ip)
+ssh -i ~/.ssh/id_rsa -J azureuser@$(cd terraform && terraform output -raw vm1_public_ip) azureuser@$(cd terraform && terraform output -raw vm2_private_ip)
+ssh -i ~/.ssh/id_rsa -J azureuser@$(cd terraform && terraform output -raw vm1_public_ip) azureuser@$(cd terraform && terraform output -raw vm3_private_ip)
 ```
 
 If you want tighter SSH security, set allowed source CIDR during apply:
@@ -145,8 +146,12 @@ Current workflow stages:
 - Azure login via OIDC (`azure/login@v2`)
 - Fetch SSH private key from Key Vault secret `vm-ssh-private-key`
 - Generate public key from fetched private key
-- Terraform init, validate, plan, apply
+- Export `TF_VAR_admin_ssh_public_key` from `~/.ssh/id_rsa.pub`
+- Terraform init, validate, plan, apply (`-auto-approve` with `admin_ssh_public_key`)
 - Export Ansible inventory
+- Install Ansible
+- Wait for SSH readiness on `vm1-public`
+- Run `ansible-playbook -i inventory.ini playbook.yml`
 - Wait 10 minutes
 - Terraform destroy
 
@@ -187,7 +192,7 @@ Main Terraform variables in `terraform/variables.tf`:
 - `subnets`
 - `vm_size` (default `Standard_DC1s_v3`)
 - `admin_username`
-- `admin_password`
+- `admin_ssh_public_key`
 - `ssh_source_cidr`
 
 Use a custom tfvars file instead of editing defaults:
@@ -195,7 +200,7 @@ Use a custom tfvars file instead of editing defaults:
 ```bash
 cd terraform
 cat > custom.tfvars <<'VARS'
-admin_password = "REPLACE_WITH_STRONG_SECRET"
+admin_ssh_public_key = "ssh-rsa AAAAB3Nza... your-key"
 ssh_source_cidr = "YOUR_PUBLIC_IP/32"
 VARS
 
@@ -230,6 +235,16 @@ Check:
 Usually Key Vault secret format issue.
 Re-upload secret from key file using `--file` so line breaks are preserved.
 
+### PostgreSQL config path error in Ansible DB role
+
+If you see missing path errors like `/etc/postgresql/16/main/postgresql.conf`, use the current role in this repo.
+It discovers `postgresql.conf` and `pg_hba.conf` dynamically under `/etc/postgresql`.
+
+### Ansible `become_user: postgres` chmod ACL error
+
+If you see `chmod: invalid mode: 'A+user:postgres:rx:allow'`, avoid `become_user: postgres` in that environment.
+This repo uses `sudo -u postgres psql ...` commands in the DB role to avoid that issue.
+
 ### `terraform validate` provider/plugin error locally
 
 If you see provider schema/plugin startup errors, remove local plugin cache and re-init:
@@ -244,13 +259,12 @@ terraform validate
 ## Security Notes
 
 - Do not keep real passwords in tracked files.
-- Prefer `TF_VAR_admin_password` environment variable or encrypted CI secrets.
+- Prefer SSH key auth and keep private keys only in secure stores (Key Vault / GitHub secrets context).
 - Restrict `ssh_source_cidr` to your IP (`/32`) instead of `0.0.0.0/0`.
 - Rotate any private key that has been exposed in terminal logs/screenshots.
 
 ## Future Improvements
 
-- Replace password auth with SSH key auth (`admin_ssh_key`) in Terraform.
 - Add separate NSGs for app/db tiers and restrict east-west ports explicitly.
 - Use remote Terraform backend (Azure Storage) with state locking.
 - Split CI into `plan` on PR and manual `apply` on main.

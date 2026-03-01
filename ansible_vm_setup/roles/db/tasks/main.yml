@@ -40,14 +40,24 @@
     name: postgresql
     state: restarted
 
-- name: Create Medusa DB
-  become_user: postgres
-  postgresql_db:
-    name: medusa
+- name: Create Medusa DB if missing
+  shell: |
+    if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='medusa'" | grep -q 1; then
+      sudo -u postgres psql -c "CREATE DATABASE medusa;"
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
 
-- name: Create DB user
-  become_user: postgres
-  postgresql_user:
-    name: medusauser
-    password: "StrongPassword123"
-    priv: "medusa:ALL"
+- name: Create DB user if missing
+  shell: |
+    if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='medusauser'" | grep -q 1; then
+      sudo -u postgres psql -c "CREATE USER medusauser WITH PASSWORD 'StrongPassword123';"
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Grant privileges on Medusa DB
+  shell: sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE medusa TO medusauser;"
+  changed_when: false
