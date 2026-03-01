@@ -76,6 +76,48 @@ Azure prerequisites:
 - Optional for CI: Azure App Registration + Federated Credential for GitHub OIDC
 - Optional for CI: Azure Key Vault secret named `vm-ssh-private-key`
 
+## Azure Remote Backend (Terraform State)
+
+This repo is configured to use Azure Storage backend (`backend "azurerm"` in `terraform/versions.tf`).
+
+1. Create backend resources once:
+
+```bash
+az group create -n rg-tfstate -l centralindia
+
+az storage account create \
+  -g rg-tfstate \
+  -n sttfstate<unique> \
+  -l centralindia \
+  --sku Standard_LRS \
+  --kind StorageV2
+
+az storage container create \
+  --name tfstate \
+  --account-name sttfstate<unique>
+```
+
+2. Create local backend config from example:
+
+```bash
+cd terraform
+cp backend.hcl.example backend.hcl
+```
+
+Then edit `backend.hcl` values (`resource_group_name`, `storage_account_name`, `container_name`, `key`).
+
+3. Initialize Terraform with backend config:
+
+```bash
+cd terraform
+terraform init -reconfigure -backend-config=backend.hcl
+```
+
+Notes:
+- `backend.hcl` is ignored by git.
+- For local auth, run `az login` first.
+- For CI auth, use Azure OIDC/service principal environment credentials.
+
 ## Local Deployment (Terraform)
 
 Run from repo root:
@@ -161,6 +203,12 @@ Set these repository secrets:
 - `AZURE_CLIENT_ID`
 - `AZURE_TENANT_ID`
 - `AZURE_SUBSCRIPTION_ID`
+
+Optional (to enable Azure remote backend in pipeline):
+- `TF_BACKEND_RESOURCE_GROUP`
+- `TF_BACKEND_STORAGE_ACCOUNT`
+- `TF_BACKEND_CONTAINER`
+- `TF_BACKEND_KEY`
 
 ### OIDC Setup (high level)
 

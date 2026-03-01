@@ -25,6 +25,7 @@ override.tf.json
 # Sensitive variable files
 *.tfvars
 *.tfvars.json
+backend.hcl
 
 # Exception: allow example tfvars
 !terraform.tfvars.example
