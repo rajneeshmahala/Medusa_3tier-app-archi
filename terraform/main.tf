@@ -92,8 +92,12 @@ resource "azurerm_linux_virtual_machine" "vm1" {
   location                        = var.location
   size                            = var.vm_size
   admin_username                  = var.admin_username
-  admin_password                  = var.admin_password
-  disable_password_authentication = false
+  disable_password_authentication = true
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = var.admin_ssh_public_key
+  }
 
   network_interface_ids = [azurerm_network_interface.nic1.id]
 
@@ -116,8 +120,12 @@ resource "azurerm_linux_virtual_machine" "vm2" {
   location                        = var.location
   size                            = var.vm_size
   admin_username                  = var.admin_username
-  admin_password                  = var.admin_password
-  disable_password_authentication = false
+  disable_password_authentication = true
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = var.admin_ssh_public_key
+  }
 
   network_interface_ids = [azurerm_network_interface.nic2.id]
 
@@ -140,8 +148,12 @@ resource "azurerm_linux_virtual_machine" "vm3" {
   location                        = var.location
   size                            = var.vm_size
   admin_username                  = var.admin_username
-  admin_password                  = var.admin_password
-  disable_password_authentication = false
+  disable_password_authentication = true
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = var.admin_ssh_public_key
+  }
 
   network_interface_ids = [azurerm_network_interface.nic3.id]
 

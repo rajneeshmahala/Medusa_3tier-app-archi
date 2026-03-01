@@ -32,8 +32,13 @@ variable "admin_username" {
 }
 
 variable "admin_password" {
-  default     = "YourStrongPassword123!"
-  
+  default = "YourStrongPassword123!"
+
+}
+
+variable "admin_ssh_public_key" {
+  description = "SSH public key content for VM login (for example: ~/.ssh/id_rsa.pub)"
+  type        = string
 }
 
 variable "ssh_source_cidr" {
