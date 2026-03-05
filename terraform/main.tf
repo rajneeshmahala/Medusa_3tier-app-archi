@@ -42,6 +42,17 @@ resource "azurerm_network_security_group" "vm1_nsg" {
     source_address_prefix      = var.ssh_source_cidr
     destination_address_prefix = "*"
   }
+  security_rule {
+    name                       = "Allow-http-Inbound"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = var.ssh_source_cidr
+    destination_address_prefix = "*"
+  }
 }
 
 resource "azurerm_network_interface" "nic1" {
