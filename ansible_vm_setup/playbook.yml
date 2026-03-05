@@ -1,12 +1,12 @@
-- hosts: db
-  become: yes
-  roles:
-    - db
+#- hosts: db
+ # become: yes
+  #roles:
+   # - db
 
-- hosts: app
-  become: yes
-  roles:
-    - app
+#- hosts: app
+ # become: yes
+  #roles:
+   # - app
 
 - hosts: web
   become: yes
