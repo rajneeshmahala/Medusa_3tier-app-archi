@@ -1,14 +1,31 @@
-#- hosts: db
- # become: yes
-  #roles:
-   # - db
+---
+# =============================================================
+# Medusa v2 — 3-Tier Deployment Playbook
+# Order: DB (VM3) → Backend API (VM2) → Frontend/Admin (VM1)
+# =============================================================
 
-#- hosts: app
- # become: yes
-  #roles:
-   # - app
-
-- hosts: web
-  become: yes
+- name: "VM3 — PostgreSQL Database"
+  hosts: db
+  become: true
+  gather_facts: true
   roles:
-    - web
+    - db
+
+#- name: "VM2 — Medusa v2 Backend API"
+#  hosts: app
+#  become: true
+#  gather_facts: true
+#  vars:
+#    db_host: "{{ hostvars[groups['db'][0]]['ansible_host'] }}"
+#  roles:
+#    - app
+
+#- name: "VM1 — Next.js Storefront + Medusa Admin"
+#  hosts: web
+#  become: true
+#  gather_facts: true
+#  vars:
+#    backend_host: "{{ hostvars[groups['app'][0]]['ansible_host'] }}"
+#    backend_url:  "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:9000"
+#  roles:
+#    - web

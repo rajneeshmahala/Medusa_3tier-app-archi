@@ -1,0 +1,19 @@
+---
+- name: reload systemd
+  systemd:
+    daemon_reload: true
+
+- name: reload nginx
+  systemd:
+    name: nginx
+    state: reloaded
+
+- name: restart nginx
+  systemd:
+    name: nginx
+    state: restarted
+
+- name: restart storefront
+  systemd:
+    name: medusa-storefront
+    state: restarted

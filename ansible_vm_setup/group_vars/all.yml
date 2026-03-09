@@ -1,0 +1,22 @@
+---
+# ================================================================
+# Shared variables — applied to ALL hosts
+# Change db_password, jwt_secret, cookie_secret before deploying
+# ================================================================
+
+# PostgreSQL
+db_name:        medusa_db
+db_user:        medusa_user
+db_password:    "MedusaPass123!"      # CHANGE IN PRODUCTION
+
+# Medusa secrets — generate with: openssl rand -hex 32
+jwt_secret:     "medusa-jwt-secret-change-me-32-chars-min"
+cookie_secret:  "medusa-cookie-secret-change-me-32-chars"
+
+# Medusa Admin credentials (initial seed)
+admin_email:    "admin@medusa-store.com"
+admin_password: "Supersecret1!"       # CHANGE IN PRODUCTION
+
+# Ports
+medusa_port:    9000
+storefront_port: 8000

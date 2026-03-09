@@ -1,0 +1,4 @@
+---
+db_name:     medusa_db
+db_user:     medusa_user
+db_password: "MedusaPass123!"

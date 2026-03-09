@@ -1,0 +1,10 @@
+---
+medusa_port:    9000
+db_port:        5432
+db_name:        medusa_db
+db_user:        medusa_user
+db_password:    "MedusaPass123!"
+jwt_secret:     "medusa-jwt-secret-change-me"
+cookie_secret:  "medusa-cookie-secret-change-me"
+admin_email:    "admin@medusa-store.com"
+admin_password: "Supersecret1!"

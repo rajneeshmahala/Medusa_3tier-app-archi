@@ -1,43 +1,167 @@
-- name: Install Node 20
-  shell: |
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt install -y nodejs git
-  args:
-    executable: /bin/bash
+---
+# ── Role: app — Medusa v2 Backend on VM2 ─────────────────────────────────────
 
-- name: Install Medusa CLI
+- name: Install system dependencies
+  apt:
+    name:
+      - curl
+      - ca-certificates
+      - git
+      - build-essential
+      - python3-pip
+      - ufw
+    state: present
+    update_cache: true
+
+- name: Add NodeSource Node.js 20 repo
+  shell: curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
+
+- name: Install Node.js 20
+  apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Install yarn globally
   npm:
-    name: "@medusajs/medusa-cli"
-    global: yes
+    name: yarn
+    global: true
+    state: present
 
-- name: Create backend
-  command: medusa new medusa-backend --seed
-  args:
-    creates: medusa-backend
+- name: Create medusa system user
+  user:
+    name: medusa
+    system: true
+    shell: /bin/bash
+    create_home: true
+    home: /opt/medusa-backend
 
-- name: Configure .env
+- name: Create Medusa backend directory
+  file:
+    path: /opt/medusa-backend
+    state: directory
+    owner: medusa
+    group: medusa
+    mode: '0755'
+
+- name: Create uploads/local storage directory
+  file:
+    path: /opt/medusa-backend/uploads
+    state: directory
+    owner: medusa
+    group: medusa
+    mode: '0755'
+
+- name: Copy Medusa backend package.json
   copy:
-    dest: medusa-backend/.env
-    content: |
-      DATABASE_URL=postgres://medusauser:StrongPassword123@10.0.3.4:5432/medusa
-      PORT=9000
+    src: package.json
+    dest: /opt/medusa-backend/package.json
+    owner: medusa
+    group: medusa
+    mode: '0644'
 
-- name: Install dependencies
-  command: npm install
+- name: Copy medusa-config.js
+  template:
+    src: medusa-config.js.j2
+    dest: /opt/medusa-backend/medusa-config.js
+    owner: medusa
+    group: medusa
+    mode: '0644'
+  notify: restart medusa
+
+- name: Write .env file
+  template:
+    src: env.j2
+    dest: /opt/medusa-backend/.env
+    owner: medusa
+    group: medusa
+    mode: '0600'
+  notify: restart medusa
+
+- name: Install Medusa npm dependencies
+  command: npm install --legacy-peer-deps
   args:
-    chdir: medusa-backend
+    chdir: /opt/medusa-backend
+  become_user: medusa
+  environment:
+    HOME: /opt/medusa-backend
 
-- name: Build app
-  command: npm run build
+- name: Run Medusa migrations
+  command: npx medusa migrations run
   args:
-    chdir: medusa-backend
+    chdir: /opt/medusa-backend
+  become_user: medusa
+  environment:
+    HOME: /opt/medusa-backend
+    NODE_ENV: production
+    DATABASE_URL: "postgresql://{{ db_user }}:{{ db_password }}@{{ db_host }}:5432/{{ db_name }}"
+    JWT_SECRET: "{{ jwt_secret }}"
+    COOKIE_SECRET: "{{ cookie_secret }}"
+  register: migrations_result
+  ignore_errors: true
 
-- name: Install PM2
-  npm:
-    name: pm2
-    global: yes
+- name: Show migration output
+  debug:
+    msg: "{{ migrations_result.stdout_lines }}"
 
-- name: Start backend with PM2
-  command: pm2 start npm --name "medusa-backend" -- start
+- name: Seed admin user
+  command: npx medusa user --email "{{ admin_email }}" --password "{{ admin_password }}"
   args:
-    chdir: medusa-backend
+    chdir: /opt/medusa-backend
+  become_user: medusa
+  environment:
+    HOME: /opt/medusa-backend
+    NODE_ENV: production
+    DATABASE_URL: "postgresql://{{ db_user }}:{{ db_password }}@{{ db_host }}:5432/{{ db_name }}"
+    JWT_SECRET: "{{ jwt_secret }}"
+    COOKIE_SECRET: "{{ cookie_secret }}"
+  ignore_errors: true  # Idempotent — ok if user already exists
+
+- name: Install systemd service for Medusa backend
+  template:
+    src: medusa-backend.service.j2
+    dest: /etc/systemd/system/medusa-backend.service
+    mode: '0644'
+  notify:
+    - reload systemd
+    - restart medusa
+
+- name: Enable and start Medusa backend
+  systemd:
+    name: medusa-backend
+    state: started
+    enabled: true
+    daemon_reload: true
+
+- name: UFW — allow SSH
+  ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+
+- name: UFW — allow Medusa API from VNet only (VM1 → VM2)
+  ufw:
+    rule: allow
+    src: "10.0.0.0/16"
+    port: "{{ medusa_port }}"
+    proto: tcp
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: deny
+
+- name: Wait for Medusa API to be healthy
+  uri:
+    url: "http://localhost:{{ medusa_port }}/health"
+    status_code: 200
+  register: health
+  retries: 20
+  delay: 10
+  until: health.status == 200
+
+- name: Show Medusa health
+  debug:
+    msg: "✔ Medusa v2 API healthy on port {{ medusa_port }}"

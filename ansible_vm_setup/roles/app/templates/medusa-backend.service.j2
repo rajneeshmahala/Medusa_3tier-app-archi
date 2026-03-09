@@ -1,0 +1,20 @@
+[Unit]
+Description=Medusa v2 Backend API
+After=network.target
+
+[Service]
+Type=simple
+User=medusa
+WorkingDirectory=/opt/medusa-backend
+EnvironmentFile=/opt/medusa-backend/.env
+ExecStart=/usr/bin/node node_modules/.bin/medusa start
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=medusa-backend
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

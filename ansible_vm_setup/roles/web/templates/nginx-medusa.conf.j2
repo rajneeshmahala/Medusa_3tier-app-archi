@@ -1,0 +1,54 @@
+server {
+    listen 80;
+    server_name _;
+
+    client_max_body_size 50M;
+
+    # ── Medusa Admin (/app) ──────────────────────────────────────────────────
+    # The admin dashboard is served by the Medusa backend directly at /app
+    location /app {
+        proxy_pass         http://{{ backend_host }}:{{ medusa_port }};
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
+    # ── Medusa Backend API (/api passthrough) ────────────────────────────────
+    location /api/ {
+        proxy_pass         http://{{ backend_host }}:{{ medusa_port }}/;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 120s;
+    }
+
+    # ── File uploads served from backend ─────────────────────────────────────
+    location /uploads/ {
+        proxy_pass http://{{ backend_host }}:{{ medusa_port }}/uploads/;
+    }
+
+    # ── Next.js Storefront (everything else) ─────────────────────────────────
+    location / {
+        proxy_pass         http://localhost:{{ storefront_port }};
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        'upgrade';
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 120s;
+    }
+
+    # Gzip
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript image/svg+xml;
+
+    # Security headers
+    add_header X-Frame-Options       "SAMEORIGIN"   always;
+    add_header X-Content-Type-Options "nosniff"      always;
+}
