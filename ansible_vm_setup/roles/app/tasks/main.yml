@@ -95,7 +95,7 @@
     COOKIE_SECRET: "{{ cookie_secret }}"
 
 - name: Run Medusa database migrations
-  command: npx medusa migrations run
+  command: npx medusa db:migrate
   args:
     chdir: /opt/medusa-backend
   become_user: medusa
@@ -106,7 +106,6 @@
     JWT_SECRET: "{{ jwt_secret }}"
     COOKIE_SECRET: "{{ cookie_secret }}"
   register: migrations_result
-  ignore_errors: true
 
 - name: Show migration output
   debug:
@@ -114,7 +113,7 @@
 
 - name: Seed Medusa admin user
   command: >
-    npx medusa user
+    npx medusa user:create
     --email "{{ admin_email }}"
     --password "{{ admin_password }}"
   args:
