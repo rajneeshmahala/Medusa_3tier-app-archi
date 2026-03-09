@@ -20,12 +20,12 @@
 #  roles:
 #    - app
 
-#- name: "VM1 — Next.js Storefront + Medusa Admin"
-#  hosts: web
-#  become: true
-#  gather_facts: true
-#  vars:
-#    backend_host: "{{ hostvars[groups['app'][0]]['ansible_host'] }}"
-#    backend_url:  "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:9000"
-#  roles:
-#    - web
+- name: "VM1 — Next.js Storefront + Medusa Admin"
+  hosts: web
+  become: true
+  gather_facts: true
+  vars:
+    backend_host: "{{ hostvars[groups['app'][0]]['ansible_host'] }}"
+    backend_url:  "http://{{ hostvars[groups['app'][0]]['ansible_host'] }}:9000"
+  roles:
+    - web
