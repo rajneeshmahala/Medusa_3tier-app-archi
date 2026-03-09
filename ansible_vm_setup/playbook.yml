@@ -11,14 +11,14 @@
   roles:
     - db
 
-#- name: "VM2 — Medusa v2 Backend API"
-#  hosts: app
-#  become: true
-#  gather_facts: true
-#  vars:
-#    db_host: "{{ hostvars[groups['db'][0]]['ansible_host'] }}"
-#  roles:
-#    - app
+- name: "VM2 — Medusa v2 Backend API"
+  hosts: app
+  become: true
+  gather_facts: true
+  vars:
+    db_host: "{{ hostvars[groups['db'][0]]['ansible_host'] }}"
+  roles:
+    - app
 
 - name: "VM1 — Next.js Storefront + Medusa Admin"
   hosts: web

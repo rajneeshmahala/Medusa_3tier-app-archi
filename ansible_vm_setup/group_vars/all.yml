@@ -10,8 +10,8 @@ db_user:        medusa_user
 db_password:    "MedusaPass123!"      # CHANGE IN PRODUCTION
 
 # Medusa secrets — generate with: openssl rand -hex 32
-jwt_secret:     "medusa-jwt-secret-change-me-32-chars-min"
-cookie_secret:  "medusa-cookie-secret-change-me-32-chars"
+jwt_secret:     "$(openssl rand -hex 32)"
+cookie_secret:  "$(openssl rand -hex 32)"
 
 # Medusa Admin credentials (initial seed)
 admin_email:    "admin@medusa-store.com"
