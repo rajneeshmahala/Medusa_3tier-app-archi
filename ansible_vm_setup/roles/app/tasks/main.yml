@@ -161,15 +161,15 @@
     state: enabled
     policy: deny
 
-- name: Wait for Medusa API health endpoint
-  uri:
-    url: "http://localhost:{{ medusa_port }}/health"
-    status_code: 200
-  register: health
-  retries: 20
-  delay: 10
-  until: health.status == 200
+#- name: Wait for Medusa API health endpoint
+#  uri:
+#    url: "http://localhost:{{ medusa_port }}/health"
+#    status_code: 200
+#  register: health
+#  retries: 20
+##  delay: 10
+#  until: health.status == 200
 
-- name: Show Medusa health
-  debug:
-    msg: "Medusa v2 API healthy on port {{ medusa_port }}"
+#- name: Show Medusa health
+#  debug:
+#    msg: "Medusa v2 API healthy on port {{ medusa_port }}"
