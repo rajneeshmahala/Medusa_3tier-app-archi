@@ -6,22 +6,22 @@ module.exports = defineConfig({
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     http: {
-      storeCors:  process.env.STORE_CORS,
-      adminCors:  process.env.ADMIN_CORS,
-      authCors:   process.env.AUTH_CORS,
-      jwtSecret:  process.env.JWT_SECRET  || "supersecret",
+      storeCors:    process.env.STORE_CORS  || "",
+      adminCors:    process.env.ADMIN_CORS  || "",
+      authCors:     process.env.AUTH_CORS   || "",
+      jwtSecret:    process.env.JWT_SECRET  || "supersecret",
       cookieSecret: process.env.COOKIE_SECRET || "supersecret",
     },
   },
 
   modules: [
-    // Local file storage (no S3 needed)
+    // Local file storage — built into @medusajs/medusa as of v2
     {
-      resolve: "@medusajs/file",
+      resolve: "@medusajs/medusa/file",
       options: {
         providers: [
           {
-            resolve: "@medusajs/file-local",
+            resolve: "@medusajs/medusa/file-local",
             id: "local",
             options: {
               upload_dir:  "uploads",

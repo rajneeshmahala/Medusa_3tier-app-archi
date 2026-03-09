@@ -8,7 +8,6 @@
       - ca-certificates
       - git
       - build-essential
-      - python3-pip
       - ufw
     state: present
     update_cache: true
@@ -23,12 +22,6 @@
     name: nodejs
     state: present
     update_cache: true
-
-- name: Install yarn globally
-  npm:
-    name: yarn
-    global: true
-    state: present
 
 - name: Create medusa system user
   user:
@@ -87,8 +80,21 @@
   become_user: medusa
   environment:
     HOME: /opt/medusa-backend
+    npm_config_cache: /opt/medusa-backend/.npm-cache
 
-- name: Run Medusa migrations
+- name: Build Medusa project (compiles to .medusa/server)
+  command: npx medusa build
+  args:
+    chdir: /opt/medusa-backend
+  become_user: medusa
+  environment:
+    HOME: /opt/medusa-backend
+    NODE_ENV: production
+    DATABASE_URL: "postgresql://{{ db_user }}:{{ db_password }}@{{ db_host }}:5432/{{ db_name }}"
+    JWT_SECRET: "{{ jwt_secret }}"
+    COOKIE_SECRET: "{{ cookie_secret }}"
+
+- name: Run Medusa database migrations
   command: npx medusa migrations run
   args:
     chdir: /opt/medusa-backend
@@ -104,10 +110,13 @@
 
 - name: Show migration output
   debug:
-    msg: "{{ migrations_result.stdout_lines }}"
+    msg: "{{ migrations_result.stdout_lines | default([]) }}"
 
-- name: Seed admin user
-  command: npx medusa user --email "{{ admin_email }}" --password "{{ admin_password }}"
+- name: Seed Medusa admin user
+  command: >
+    npx medusa user
+    --email "{{ admin_email }}"
+    --password "{{ admin_password }}"
   args:
     chdir: /opt/medusa-backend
   become_user: medusa
@@ -117,7 +126,7 @@
     DATABASE_URL: "postgresql://{{ db_user }}:{{ db_password }}@{{ db_host }}:5432/{{ db_name }}"
     JWT_SECRET: "{{ jwt_secret }}"
     COOKIE_SECRET: "{{ cookie_secret }}"
-  ignore_errors: true  # Idempotent — ok if user already exists
+  ignore_errors: true
 
 - name: Install systemd service for Medusa backend
   template:
@@ -141,7 +150,7 @@
     port: "22"
     proto: tcp
 
-- name: UFW — allow Medusa API from VNet only (VM1 → VM2)
+- name: UFW — allow Medusa API from VNet only (VM1 to VM2)
   ufw:
     rule: allow
     src: "10.0.0.0/16"
@@ -153,7 +162,7 @@
     state: enabled
     policy: deny
 
-- name: Wait for Medusa API to be healthy
+- name: Wait for Medusa API health endpoint
   uri:
     url: "http://localhost:{{ medusa_port }}/health"
     status_code: 200
@@ -164,4 +173,4 @@
 
 - name: Show Medusa health
   debug:
-    msg: "✔ Medusa v2 API healthy on port {{ medusa_port }}"
+    msg: "Medusa v2 API healthy on port {{ medusa_port }}"

@@ -3,19 +3,22 @@
   "version": "2.0.0",
   "description": "Medusa v2 headless commerce backend",
   "scripts": {
-    "start":     "medusa start",
-    "dev":       "medusa develop",
-    "build":     "medusa build",
-    "seed":      "medusa exec ./src/scripts/seed.js",
-    "migrate":   "medusa migrations run"
+    "start":   "medusa start",
+    "dev":     "medusa develop",
+    "build":   "medusa build",
+    "migrate": "medusa migrations run"
   },
   "dependencies": {
-    "@medusajs/medusa":         "2.x",
-    "@medusajs/framework":      "2.x",
-    "@medusajs/file-local":     "2.x",
-    "@medusajs/dashboard":      "2.x",
-    "@medusajs/medusa-compat":  "2.x",
-    "pg":                       "^8.11.3"
+    "@medusajs/medusa":    "2.13.3",
+    "@medusajs/framework": "2.13.3",
+    "@medusajs/admin-sdk": "2.13.3",
+    "@medusajs/cli":       "2.13.3",
+    "@medusajs/file-local":"2.13.3",
+    "pg":                  "^8.11.3"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.7.28",
+    "@swc/jest": "^0.2.36"
   },
   "engines": {
     "node": ">=20"
