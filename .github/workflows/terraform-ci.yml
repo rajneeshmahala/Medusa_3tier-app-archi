@@ -91,11 +91,20 @@ jobs:
       # ---------------------------------
       - name: Generate Ansible Inventory
         run: terraform output 
-
-      - name: Install Ansible
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible
+            # ---------------------------------
+      # Upload SSH Keys as Artifact
+      # ---------------------------------
+      - name: Upload SSH Keys Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssh-keys
+          path: |
+            ~/.ssh/id_rsa
+            ~/.ssh/id_rsa.pub
+   #   - name: Install Ansible
+  #      run: |
+  #        sudo apt-get update
+   #       sudo apt-get install -y ansible
 
       - name: Wait for SSH on vm1
         run: |
@@ -111,9 +120,9 @@ jobs:
           echo "SSH did not become ready on vm1."
           exit 1
 
-      - name: Run Ansible Playbook
-        working-directory: ansible_vm_setup
-        run: ansible-playbook -i inventory.ini playbook.yml
+   #   - name: Run Ansible Playbook
+   #     working-directory: ansible_vm_setup
+     #   run: ansible-playbook -i inventory.ini playbook.yml
 
       # ---------------------------------
 
@@ -121,11 +130,11 @@ jobs:
       # ---------------------------------
       # WAIT 10 MINUTES
       # ---------------------------------
-      - name: Wait 10 minutes before destroy
-        run: sleep 600
+   #   - name: Wait 10 minutes before destroy
+   #     run: sleep 600
 
       # ---------------------------------
       # Destroy
       # ---------------------------------
-      - name: Terraform Destroy
-        run: terraform destroy -auto-approve
+  #    - name: Terraform Destroy
+    #    run: terraform destroy -auto-approve
